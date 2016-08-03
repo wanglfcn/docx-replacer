@@ -80,8 +80,8 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 
 					for i, col := range row.Cells {
 						titles[i], _ = col.String()
-						titles[i] = strings.TrimSpace(titles[i])
-						replace_strs = append(replace_strs, "{{" + titles[i] + "}}")
+						titles[i] = "{{" + strings.TrimSpace(titles[i]) + "}}"
+						replace_strs = append(replace_strs, titles[i])
 						max_col = i
 						fmt.Printf("title: %d:\t%s\n", i, titles[i])
 					}
@@ -91,7 +91,7 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 					file_name := ""
 
 					for i, col := range row.Cells {
-						if col > max_col {
+						if i > max_col {
 							break
 						}
 
