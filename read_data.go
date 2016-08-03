@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/tealeg/xlsx"
 	"log"
-	"github.com/nguyenthenguyen/docx"
 	"strings"
 	"fmt"
 	"path/filepath"
@@ -61,7 +60,7 @@ func (xlsx *XlsxData) getTitles(sheet_index int) ([]string){
 
 func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path string) {
 
-	template_doc, err := docx.ReadDocxFile(template)
+	template_doc, err := ReadDocxFile(template)
 
 	if err != nil {
 		log.Fatalf("open template file with err: %v", err)
@@ -70,22 +69,32 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 
 	titles := make(map[int] string)
 
+	var max_col int
+
 	for index, sheet := range xlsx.fh.Sheets {
 		if index == sheet_index {
 
 			for r, row := range sheet.Rows {
 				if r== 0 {
+					var replace_strs []string
+
 					for i, col := range row.Cells {
 						titles[i], _ = col.String()
 						titles[i] = strings.TrimSpace(titles[i])
+						replace_strs = append(replace_strs, "{{" + titles[i] + "}}")
+						max_col = i
 						fmt.Printf("title: %d:\t%s\n", i, titles[i])
 					}
+					template_doc.set_reapace_map(replace_strs)
 				} else {
-					new_doc := template_doc.Editable()
 
 					file_name := ""
 
 					for i, col := range row.Cells {
+						if col > max_col {
+							break
+						}
+
 						value, _ := col.String()
 
 						if i == name_index {
@@ -93,8 +102,10 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 						}
 
 						fmt.Printf("replace %s:\t%s\n", titles[i], value)
-						new_doc.Replace(titles[i], value, -1)
+						template_doc.replace(titles[i], value)
 					}
+
+					new_doc := template_doc.Editable()
 
 					new_path := fmt.Sprintf("%s/%s.docx", filepath.ToSlash(save_path), file_name)
 					log.Printf("write new file %s", filepath.FromSlash(new_path))
