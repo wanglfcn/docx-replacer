@@ -88,7 +88,7 @@ func mainwindow() {
 
 	export_btn.OnClicked(
 		func(*ui.Button) {
-			save_path = ui.SaveFile(window)
+			save_path = ui.OpenDir(window)
 			export_text_field.SetText(save_path)
 		},
 	)

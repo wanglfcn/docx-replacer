@@ -2,8 +2,6 @@ package main
 
 import (
 	"os"
-	"github.com/lestrrat/go-libxml2/parser"
-	"github.com/lestrrat/go-libxml2/types"
 	"log"
 	"strings"
 	"archive/zip"
@@ -14,7 +12,7 @@ import (
 )
 
 type NodeList struct {
-	node 	types.Node
+	node 	*Node
 	prefix 	string
 	suffix 	string
 	start 	int
@@ -23,43 +21,40 @@ type NodeList struct {
 
 type ReplaceDocx struct {
 	zipReader 	*zip.ReadCloser
-	dom 		types.Document
+	dom 		*Dom
 	nodelist 	[]NodeList
 	content_str	string
 	content_xml	string
 	replace_map 	map[string][]NodeList
 }
 
-func ParseDocXml(doc_xml string) (dom types.Document, nodelist []NodeList, content string, err error) {
-	doc_parse := parser.New()
 
-	dom, err = doc_parse.ParseString(doc_xml)
+func ParseDocXml(doc_xml string) (dom *Dom, nodelist []NodeList, content string, err error) {
+
+	dom, err = Parse(doc_xml, "<w:t>", "</w:t>")
 
 	if err != nil {
 		log.Printf("parse xml with error %v", err)
 		return
 	}
 
+
 	content_length := 0
 
-	dom.Walk(
-		func(node types.Node) error {
-			if strings.EqualFold(node.NodeName(), "w:t") {
-				content += node.TextContent()
-				new_length := len(content) - 1
-				nodelist = append(nodelist,
-					NodeList{
-						node:node,
-						start:content_length,
-						end: new_length,
-						prefix: "",
-						suffix: "",
-					},
-				)
-				content_length = new_length + 1
-			}
-			return nil
-	})
+	for _, node := range dom.node_list {
+		content += node.content
+		new_length := len(content) - 1
+		nodelist = append(nodelist,
+			NodeList{
+				node:	node,
+				start:	content_length,
+				end: 	new_length,
+				prefix: "",
+				suffix: "",
+			},
+		)
+		content_length = new_length + 1
+	}
 
 	return
 }
@@ -71,14 +66,14 @@ func (r *ReplaceDocx)find_nodes(start, end int) (node NodeList, ok bool) {
 	for _, node := range r.nodelist {
 		if (node.start <= end && node.end >= start) {
 			if node.start < start {
-				node.prefix = node.node.TextContent()[:start - node.start]
+				node.prefix = node.node.content[:start - node.start]
 			}
 
 			if node.end > end {
-				node.suffix = node.node.TextContent()[end - node.start + 1:]
+				node.suffix = node.node.content[end - node.start + 1:]
 			}
 
-			node.node.SetNodeValue(node.prefix + node.suffix)
+			node.node.set_value(node.prefix + node.suffix)
 			targetList = append(targetList, node)
 		}
 	}
@@ -128,7 +123,7 @@ func(r *ReplaceDocx)replace(orig, target string) {
 	if rep_map, ok := r.replace_map[orig]; ok {
 
 		for _, node := range rep_map {
-			node.node.SetNodeValue(node.prefix + target + node.suffix)
+			node.node.set_value(node.prefix + target + node.suffix)
 		}
 	}
 }
@@ -136,7 +131,7 @@ func(r *ReplaceDocx)replace(orig, target string) {
 func (r *ReplaceDocx) Editable() *Docx {
 	return &Docx{
 		files:   r.zipReader.File,
-		content: r.dom.String(),
+		content: r.dom.toString(),
 	}
 }
 
