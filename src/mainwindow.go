@@ -18,7 +18,7 @@ func mainwindow() {
 	temp_text_field := ui.NewEntry()
 	temp_text_field.SetReadOnly(true)
 	temp_btn := ui.NewButton("打开")
-	temp_box.Append(ui.NewLabel("模板文件:"), false)
+	temp_box.Append(ui.NewLabel("模板文件(word):"), false)
 	temp_box.Append(temp_text_field, true)
 	temp_box.Append(temp_btn, false)
 
@@ -28,7 +28,7 @@ func mainwindow() {
 	data_text_field := ui.NewEntry()
 	data_text_field.SetReadOnly(true)
 	data_btn := ui.NewButton("打开")
-	data_box.Append(ui.NewLabel("数据文件:"), false)
+	data_box.Append(ui.NewLabel("数据文件(excel):"), false)
 	data_box.Append(data_text_field, true)
 	data_box.Append(data_btn, false)
 
@@ -36,7 +36,7 @@ func mainwindow() {
 
 	export_box := ui.NewHorizontalBox()
 	export_text_field := ui.NewEntry()
-	export_text_field.SetReadOnly(false)
+	export_text_field.SetReadOnly(true)
 	export_btn := ui.NewButton("打开")
 	export_box.Append(ui.NewLabel("导出位置:"), false)
 	export_box.Append(export_text_field, true)
@@ -66,9 +66,13 @@ func mainwindow() {
 	exec_btn := ui.NewButton("执行")
 	outer_box.Append(exec_btn, false)
 
+	stats_label := ui.NewLabel("")
+	outer_box.Append(stats_label, true)
+
 	exec_btn.OnClicked(
 		func(*ui.Button) {
-			excel_data.replace(sheet_comb.Selected(), file_name_comb.Selected(), temp_file , save_path)
+			stats_label.SetText("开始..")
+			excel_data.replace(sheet_comb.Selected(), file_name_comb.Selected(), temp_file , save_path, stats_label)
 		},
 	)
 

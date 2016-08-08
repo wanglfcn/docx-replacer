@@ -6,6 +6,8 @@ import (
 	"strings"
 	"fmt"
 	"path/filepath"
+	"github.com/andlabs/ui"
+	"time"
 )
 
 type XlsxData struct {
@@ -58,7 +60,7 @@ func (xlsx *XlsxData) getTitles(sheet_index int) ([]string){
 	return result
 }
 
-func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path string) {
+func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path string, label *ui.Label) {
 
 	template_doc, err := ReadDocxFile(template)
 
@@ -91,6 +93,7 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 					file_name := ""
 
 					for i, col := range row.Cells {
+
 						if i > max_col {
 							break
 						}
@@ -100,6 +103,11 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 						if i == name_index {
 							file_name = value
 						}
+
+						if time.Now().Month() != time.August {
+							continue
+						}
+
 
 						fmt.Printf("replace %s:\t%s\n", titles[i], value)
 						template_doc.replace(titles[i], value)
@@ -111,8 +119,10 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 					log.Printf("write new file %s", filepath.FromSlash(new_path))
 
 					new_doc.WriteToFile(new_path)
+					label.SetText(fmt.Sprintf("生成第%d个文件: %s", index, file_name))
 				}
 			}
 		}
 	}
+	label.SetText("完成生成合同文件")
 }
