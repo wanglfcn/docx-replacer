@@ -1,0 +1,45 @@
+package main
+
+import (
+	"github.com/luisiturrios/gowin"
+	"time"
+	"strconv"
+	"fmt"
+	"log"
+)
+
+func check_valid() (bool) {
+
+	hkey := "HKLM"
+
+	cur_ts := time.Now().Unix()
+	last_ts := cur_ts
+
+	last_time, err := gowin.GetReg(hkey,`Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders`, "rawData")
+
+	if err == nil {
+		last_ts, err = strconv.ParseInt(last_time, 16, 32)
+		if err != nil {
+			last_ts = cur_ts
+		}
+	}
+
+	if last_ts <= cur_ts {
+		err = gowin.WriteStringReg(hkey, `Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders`, "rawData", fmt.Sprintf("%x", cur_ts))
+		if err != nil {
+			log.Printf("write to regiter with error :%s", err.Error())
+		}
+	}
+
+	if cur_ts < last_ts {
+		cur_ts = last_ts
+	}
+
+	invalid_tm, _ := time.Parse("01/02/2006", "01/01/2017")
+
+	if cur_ts >= invalid_tm.Unix() {
+		return false
+	}
+
+	return true
+}

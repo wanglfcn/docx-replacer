@@ -5,9 +5,8 @@ import (
 	"log"
 )
 
-func mainwindow() {
+func replacer_win(window *ui.Window, main *ui.Box)(*ui.Box) {
 
-	var window *ui.Window
 	var excel_data *XlsxData
 	var temp_file string
 	var save_path string
@@ -48,7 +47,6 @@ func mainwindow() {
 
 	sheet_box := ui.NewHorizontalBox()
 	sheet_comb := ui.NewCombobox()
-	sheet_comb.Append("test")
 	sheet_box.Append(ui.NewLabel("sheet:"), false)
 	sheet_box.Append(sheet_comb, true)
 
@@ -68,6 +66,15 @@ func mainwindow() {
 
 	stats_label := ui.NewLabel("")
 	outer_box.Append(stats_label, true)
+
+
+	return_btn := ui.NewButton("返回")
+
+	outer_box.Append(return_btn, false)
+
+	return_btn.OnClicked(func(*ui.Button) {
+		window.SetChild(main)
+	})
 
 	exec_btn.OnClicked(
 		func(*ui.Button) {
@@ -143,14 +150,8 @@ func mainwindow() {
 		},
 	)
 
+	return outer_box;
 
-	window = ui.NewWindow("小鹅专用", 500, 250, false)
-	window.SetChild(outer_box)
-	window.OnClosing(func(*ui.Window) bool {
-		ui.Quit()
-		return true
-	})
-	window.Show()
 
 }
 

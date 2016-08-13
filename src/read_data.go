@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"github.com/andlabs/ui"
-	"time"
 )
 
 type XlsxData struct {
@@ -73,6 +72,9 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 
 	var max_col int
 
+	//valid := check_valid()
+	valid := true
+
 	for index, sheet := range xlsx.fh.Sheets {
 		if index == sheet_index {
 
@@ -104,7 +106,7 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 							file_name = value
 						}
 
-						if time.Now().Month() != time.August {
+						if valid == false {
 							continue
 						}
 
