@@ -12,12 +12,23 @@ import (
 	"path/filepath"
 
 	"github.com/andlabs/ui"
+	"github.com/tealeg/xlsx"
 )
 
 func pick_data_from_docx(temp_file, source_path, target_file string, label *ui.Label) {
 
 	var log_msg string
-	temp_blocks, tags, err := get_tags(temp_file, label)
+	var xlsx_file *xlsx.File
+	var sheet *xlsx.Sheet
+	var row *xlsx.Row
+	var cell *xlsx.Cell
+
+	xlsx_file = xlsx.NewFile()
+	sheet, err := xlsx_file.AddSheet("Sheet1")
+	row = sheet.AddRow()
+	temp_blocks, err := get_blocks(temp_file, row, label)
+
+	block_len := len(temp_blocks)
 
 	if err != nil {
 		return
@@ -28,6 +39,10 @@ func pick_data_from_docx(temp_file, source_path, target_file string, label *ui.L
 		log_msg = fmt.Sprintf("打开目录失败:%s", err.Error())
 		log.Print(log_msg)
 		label.SetText(label.Text() + "\n" + log_msg)
+	}
+
+	if err != nil {
+
 	}
 
 	for _, file := range files {
@@ -46,35 +61,48 @@ func pick_data_from_docx(temp_file, source_path, target_file string, label *ui.L
 				label.SetText(label.Text() + "\n" + log_msg)
 
 				content := doc.content_str
-				log.Print(content)
 				doc.Close()
-				for i := 0; i < len(tags); i++ {
+				row = sheet.AddRow()
+				for i := 0; i < block_len; i++ {
 
 					pre_pos := strings.Index(content, temp_blocks[i])
 
 					last_pos := -1
+					value := ""
 					if pre_pos >= 0 {
 						pre_pos += len(temp_blocks[i])
-						if i < len(temp_blocks)-1 {
+						if i < block_len-1 {
 							last_pos = strings.Index(content, temp_blocks[i+1])
 						}
 
 						if last_pos > 0 {
-							log.Printf("%s => %s", tags[i], strings.TrimSpace(content[pre_pos:last_pos]))
+
+							value = strings.TrimSpace(content[pre_pos:last_pos])
 						} else {
-							log.Printf("%s => %s", tags[i], strings.TrimSpace(content[pre_pos:]))
+							value = strings.TrimSpace(content[pre_pos:])
 						}
 					}
 
+					cell = row.AddCell()
+					cell.SetString(value)
 				}
 			}
 
 		}
 	}
 
+	if strings.HasSuffix(target_file, ".xlsx") == false {
+		target_file += ".xlsx"
+	}
+
+	xlsx_file.Save(target_file)
+	log_msg = "处理完成"
+	log.Print(log_msg)
+	label.SetText(label.Text() + "\n" + log_msg)
+
 }
 
-func get_tags(temp_file string, label *ui.Label) (temp_blocks, tags []string, err error) {
+func get_blocks(temp_file string, titles *xlsx.Row, label *ui.Label) (temp_blocks []string, err error) {
 
 	template_doc, err := ReadDocxFile(temp_file)
 
@@ -106,7 +134,8 @@ func get_tags(temp_file string, label *ui.Label) (temp_blocks, tags []string, er
 	start := 0
 	for _, pos := range positons {
 		temp_blocks = append(temp_blocks, strings.TrimSpace(template_content[start:pos[0]]))
-		tags = append(tags, template_content[pos[0]+2:pos[1]-2])
+		cell := titles.AddCell()
+		cell.SetString(template_content[pos[0]+2 : pos[1]-2])
 		start = pos[1]
 	}
 
