@@ -1,43 +1,41 @@
 package main
 
 import (
-	"os"
-	"log"
-	"strings"
 	"archive/zip"
-	"io"
 	"bytes"
-	"io/ioutil"
 	"errors"
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+	"strings"
 )
 
 type NodeList struct {
-	node 	*Node
-	prefix 	string
-	suffix 	string
-	start 	int
-	end 	int
+	node   *Node
+	prefix string
+	suffix string
+	start  int
+	end    int
 }
 
 type ReplaceDocx struct {
-	zipReader 	*zip.ReadCloser
-	dom 		*Dom
-	nodelist 	[]NodeList
-	content_str	string
-	content_xml	string
-	replace_map 	map[string][]NodeList
+	zipReader   *zip.ReadCloser
+	dom         *Dom
+	nodelist    []NodeList
+	content_str string
+	content_xml string
+	replace_map map[string][]NodeList
 }
-
 
 func ParseDocXml(doc_xml string) (dom *Dom, nodelist []NodeList, content string, err error) {
 
-	dom, err = Parse(doc_xml, "<w:t>", "</w:t>")
+	dom, err = Parse(doc_xml, "<w:t.*?>", "</w:t.*?>")
 
 	if err != nil {
 		log.Printf("parse xml with error %v", err)
 		return
 	}
-
 
 	content_length := 0
 
@@ -46,9 +44,9 @@ func ParseDocXml(doc_xml string) (dom *Dom, nodelist []NodeList, content string,
 		new_length := len(content) - 1
 		nodelist = append(nodelist,
 			NodeList{
-				node:	node,
-				start:	content_length,
-				end: 	new_length,
+				node:   node,
+				start:  content_length,
+				end:    new_length,
 				prefix: "",
 				suffix: "",
 			},
@@ -59,18 +57,18 @@ func ParseDocXml(doc_xml string) (dom *Dom, nodelist []NodeList, content string,
 	return
 }
 
-func (r *ReplaceDocx)find_nodes(start, end int) (node NodeList, ok bool) {
+func (r *ReplaceDocx) find_nodes(start, end int) (node NodeList, ok bool) {
 
 	var targetList []NodeList
 
 	for _, node := range r.nodelist {
-		if (node.start <= end && node.end >= start) {
+		if node.start <= end && node.end >= start {
 			if node.start < start {
-				node.prefix = node.node.content[:start - node.start]
+				node.prefix = node.node.content[:start-node.start]
 			}
 
 			if node.end > end {
-				node.suffix = node.node.content[end - node.start + 1:]
+				node.suffix = node.node.content[end-node.start+1:]
 			}
 
 			node.node.set_value(node.prefix + node.suffix)
@@ -88,7 +86,7 @@ func (r *ReplaceDocx)find_nodes(start, end int) (node NodeList, ok bool) {
 	return
 }
 
-func (r *ReplaceDocx)set_reapace_map(replaces []string) {
+func (r *ReplaceDocx) set_reapace_map(replaces []string) {
 
 	replace_map := make(map[string][]NodeList)
 
@@ -119,7 +117,7 @@ func (r *ReplaceDocx)set_reapace_map(replaces []string) {
 	r.replace_map = replace_map
 }
 
-func(r *ReplaceDocx)replace(orig, target string) {
+func (r *ReplaceDocx) replace(orig, target string) {
 	if rep_map, ok := r.replace_map[orig]; ok {
 
 		for _, node := range rep_map {

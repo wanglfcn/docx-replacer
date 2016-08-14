@@ -1,17 +1,18 @@
 package main
 
 import (
-	"github.com/tealeg/xlsx"
-	"log"
-	"strings"
 	"fmt"
+	"log"
 	"path/filepath"
+	"strings"
+
 	"github.com/andlabs/ui"
+	"github.com/tealeg/xlsx"
 )
 
 type XlsxData struct {
-	file_path 	string
-	fh 		*xlsx.File
+	file_path string
+	fh        *xlsx.File
 }
 
 func NewXlsxData(file_path string) (*XlsxData, error) {
@@ -25,19 +26,19 @@ func NewXlsxData(file_path string) (*XlsxData, error) {
 	}
 }
 
-func (xlsx *XlsxData) getSheets() ([]string) {
+func (xlsx *XlsxData) getSheets() []string {
 
 	var result []string
 
 	sheets := xlsx.fh.Sheets
-	for _, sheet:= range sheets {
+	for _, sheet := range sheets {
 		result = append(result, sheet.Name)
 	}
 
 	return result
 }
 
-func (xlsx *XlsxData) getTitles(sheet_index int) ([]string){
+func (xlsx *XlsxData) getTitles(sheet_index int) []string {
 
 	var result []string
 
@@ -63,12 +64,16 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 
 	template_doc, err := ReadDocxFile(template)
 
+	var log_msg string
+
 	if err != nil {
-		log.Fatalf("open template file with err: %v", err)
+		log_msg = fmt.Sprintf("打开模版文件错误: %s", err.Error())
+		label.SetText(label.Text() + "\n" + log_msg)
+		log.Print(log_msg)
 	}
 	defer template_doc.Close()
 
-	titles := make(map[int] string)
+	titles := make(map[int]string)
 
 	var max_col int
 
@@ -79,7 +84,7 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 		if index == sheet_index {
 
 			for r, row := range sheet.Rows {
-				if r== 0 {
+				if r == 0 {
 					var replace_strs []string
 
 					for i, col := range row.Cells {
@@ -110,7 +115,6 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 							continue
 						}
 
-
 						fmt.Printf("replace %s:\t%s\n", titles[i], value)
 						template_doc.replace(titles[i], value)
 					}
@@ -120,11 +124,19 @@ func (xlsx *XlsxData) replace(sheet_index, name_index int, template, save_path s
 					new_path := fmt.Sprintf("%s/%s.docx", filepath.ToSlash(save_path), file_name)
 					log.Printf("write new file %s", filepath.FromSlash(new_path))
 
-					new_doc.WriteToFile(new_path)
-					label.SetText(fmt.Sprintf("生成第%d个文件: %s", index, file_name))
+					err = new_doc.WriteToFile(new_path)
+					if err != nil {
+						log_msg = fmt.Sprintf("[%d]生成文件[%s.docx]失败", index, file_name)
+					} else {
+						log_msg = fmt.Sprintf("[%d]生成文件[%s.docx]成功", index, file_name)
+					}
+					label.SetText(label.Text() + "\n" + log_msg)
+					log.Print(log_msg)
 				}
 			}
 		}
 	}
-	label.SetText("完成生成合同文件")
+	log_msg = "完成"
+	label.SetText(label.Text() + "\n" + log_msg)
+	log.Print(log_msg)
 }

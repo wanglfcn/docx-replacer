@@ -1,19 +1,20 @@
 package main
 
 import (
-	"github.com/andlabs/ui"
 	"log"
+
+	"github.com/andlabs/ui"
 )
 
-func replacer_win(window *ui.Window, main *ui.Box)(*ui.Box) {
+func replacer_win(window *ui.Window, main *ui.Box) *ui.Box {
 
 	var excel_data *XlsxData
 	var temp_file string
 	var save_path string
 
-	outer_box := ui.NewVerticalBox();
+	outer_box := ui.NewVerticalBox()
 
-	temp_box := ui.NewHorizontalBox();
+	temp_box := ui.NewHorizontalBox()
 	temp_text_field := ui.NewEntry()
 	temp_text_field.SetReadOnly(true)
 	temp_btn := ui.NewButton("打开")
@@ -67,7 +68,6 @@ func replacer_win(window *ui.Window, main *ui.Box)(*ui.Box) {
 	stats_label := ui.NewLabel("")
 	outer_box.Append(stats_label, true)
 
-
 	return_btn := ui.NewButton("返回")
 
 	outer_box.Append(return_btn, false)
@@ -78,11 +78,14 @@ func replacer_win(window *ui.Window, main *ui.Box)(*ui.Box) {
 
 	exec_btn.OnClicked(
 		func(*ui.Button) {
-			stats_label.SetText("开始..")
-			excel_data.replace(sheet_comb.Selected(), file_name_comb.Selected(), temp_file , save_path, stats_label)
+			go func() {
+				exec_btn.Disable()
+				stats_label.SetText("开始..")
+				excel_data.replace(sheet_comb.Selected(), file_name_comb.Selected(), temp_file, save_path, stats_label)
+				exec_btn.Enable()
+			}()
 		},
 	)
-
 
 	temp_btn.OnClicked(
 		func(*ui.Button) {
@@ -150,8 +153,6 @@ func replacer_win(window *ui.Window, main *ui.Box)(*ui.Box) {
 		},
 	)
 
-	return outer_box;
-
+	return outer_box
 
 }
-
