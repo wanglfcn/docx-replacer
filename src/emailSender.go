@@ -61,36 +61,45 @@ func email_sender_win(window *ui.Window, main *ui.Box) *ui.Box {
 
 	outer_box.Append(data_box, false)
 
-	select_box := ui.NewHorizontalBox()
+	select_first_box := ui.NewHorizontalBox()
 
 	sheet_box := ui.NewHorizontalBox()
 	sheet_comb := ui.NewCombobox()
 	sheet_box.Append(ui.NewLabel("sheet:"), false)
 	sheet_box.Append(sheet_comb, true)
 
-	select_box.Append(sheet_box, true)
+	select_first_box.Append(sheet_box, true)
 
 	email_pos_box := ui.NewHorizontalBox()
 	email_pos_comb := ui.NewCombobox()
 	email_pos_box.Append(ui.NewLabel("email:"), false)
 	email_pos_box.Append(email_pos_comb, true)
 
-	select_box.Append(email_pos_box, true)
+	select_first_box.Append(email_pos_box, true)
+	outer_box.Append(select_first_box, false)
+
+	select_sec_box := ui.NewHorizontalBox()
 
 	subject_box := ui.NewHorizontalBox()
 	subject_comb := ui.NewCombobox()
 	subject_box.Append(ui.NewLabel("主题:"), false)
 	subject_box.Append(subject_comb, true)
 
-	select_box.Append(subject_box, true)
+	select_sec_box.Append(subject_box, true)
 
-	outer_box.Append(select_box, false)
+	cc_box := ui.NewHorizontalBox()
+	cc_comb := ui.NewCombobox()
+	cc_box.Append(ui.NewLabel("抄送:"), false)
+	cc_box.Append(cc_comb, true)
+
+	select_sec_box.Append(cc_box, true)
+
+	outer_box.Append(select_sec_box, false)
 
 	send_box := ui.NewHorizontalBox()
 	send_to_self_btn := ui.NewButton("发送给自己")
 	exec_btn := ui.NewButton("执行")
 	send_box.Append(send_to_self_btn, false)
-	send_box.Append(ui.NewVerticalSeparator(), true)
 	send_box.Append(exec_btn, false)
 	outer_box.Append(send_box, false)
 
@@ -135,9 +144,11 @@ func email_sender_win(window *ui.Window, main *ui.Box) *ui.Box {
 
 				email_pos_comb.Reset()
 				subject_comb.Reset()
+				cc_comb.Reset()
 				for _, title := range titles {
 					email_pos_comb.Append(title)
 					subject_comb.Append(title)
+					cc_comb.Append(title)
 				}
 				email_pos_comb.SetSelected(0)
 				subject_comb.SetSelected(0)
@@ -154,9 +165,11 @@ func email_sender_win(window *ui.Window, main *ui.Box) *ui.Box {
 
 			email_pos_comb.Reset()
 			subject_comb.Reset()
+			cc_comb.Reset()
 			for _, title := range titles {
 				email_pos_comb.Append(title)
 				subject_comb.Append(title)
+				cc_comb.Append(title)
 			}
 			email_pos_comb.SetSelected(0)
 			subject_comb.SetSelected(0)
@@ -168,7 +181,7 @@ func email_sender_win(window *ui.Window, main *ui.Box) *ui.Box {
 			send_to_self_btn.Disable()
 			exec_btn.Disable()
 			stats_label.SetText("开始发送邮件...")
-			send_all(excel_data, temp_file, email, password, sheet_comb.Selected(), email_pos_comb.Selected(), subject_comb.Selected(), stats_label, true)
+			send_all(excel_data, temp_file, email, password, sheet_comb.Selected(), email_pos_comb.Selected(), subject_comb.Selected(), cc_comb.Selected(), stats_label, true)
 			send_to_self_btn.Enable()
 			exec_btn.Enable()
 		}()
@@ -179,7 +192,7 @@ func email_sender_win(window *ui.Window, main *ui.Box) *ui.Box {
 			send_to_self_btn.Disable()
 			exec_btn.Disable()
 			stats_label.SetText("开始发送邮件...")
-			send_all(excel_data, temp_file, email, password, sheet_comb.Selected(), email_pos_comb.Selected(), subject_comb.Selected(), stats_label, false)
+			send_all(excel_data, temp_file, email, password, sheet_comb.Selected(), email_pos_comb.Selected(), subject_comb.Selected(), cc_comb.Selected(), stats_label, false)
 			send_to_self_btn.Enable()
 			exec_btn.Enable()
 		}()
